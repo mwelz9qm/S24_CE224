@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
-
+#include "FinalProject-gameCode.h"// this header contains definitions for generateChests, ensureExit, ensureKey, moveEnemies
 using namespace std;
 
 class DisjointSet {
@@ -24,12 +24,20 @@ public:
     }
 
     int find(int u) {
+        if (u < 0 || u >= parent.size()) {
+            // Handle out-of-range index
+            return -1; // Or throw an exception
+        }
         if (parent[u] != u)
             parent[u] = find(parent[u]);
         return parent[u];
     }
 
     void merge(int u, int v) {
+        if (u < 0 || u >= parent.size() || v < 0 || v >= parent.size()) {
+            // Handle out-of-range index
+            return; // Or throw an exception
+        }
         u = find(u);
         v = find(v);
         if (u != v) {
@@ -51,7 +59,6 @@ void moveEnemies(char** maze, int height, int width, int& posX, int& posY, int& 
 void generateChests(char** maze, int height, int width);
 void ensureExit(char** maze, int height, int width);
 void ensureKey(char** maze, int height, int width);
-
 
 vector<pair<int, int>> calculateOptimalRoute(char** maze, int height, int width, int posX, int posY, vector<string>& inventory);
 
@@ -139,7 +146,7 @@ void generateMaze(char**& maze, int height, int width)
 
     // Randomly generate walls inside the maze using disjoint sets
     srand(time(NULL)); // Seed the random number generator
-    int numWalls = height * width / 4; // Adjust this number as needed
+    int numWalls = height * width / 4; 
     for (int k = 0; k < numWalls; ++k)
     {
         int randX = 1 + rand() % (height - 2); // Generate random x coordinate
@@ -162,14 +169,14 @@ void generateMaze(char**& maze, int height, int width)
     }
 
     // Randomly generate enemies inside the maze represented by '?'
-    int numEnemies = height * width / 20; // Adjust this number as needed
+    int numEnemies = height * width / 20; 
     for (int k = 0; k < numEnemies; ++k)
     {
         int randX = 1 + rand() % (height - 2); // Generates random x coordinate
         int randY = 1 + rand() % (width - 2); // Generates random y coordinate
-        if (maze[randX][randY] != '#' && maze[randX][randY] != 'P') // Make sure the position is not a wall or player
+        if (maze[randX][randY] != '#' && maze[randX][randY] != 'P')
         {
-            maze[randX][randY] = '?'; // Place an enemy at the random position
+            maze[randX][randY] = '?'; // Places an enemy at the random position
         }
     }
 
@@ -177,8 +184,10 @@ void generateMaze(char**& maze, int height, int width)
     ensureExit(maze, height, width);
     ensureKey(maze, height, width);
 }
+
 void deleteMaze(char**& maze, int height)
 {
+    // Free memory allocated for maze
     for (int i = 0; i < height; ++i)
     {
         delete[] maze[i];
@@ -200,8 +209,8 @@ void printMaze(char** maze, int height, int width)
 
 void printMazeWithRoute(char** maze, int height, int width, const vector<pair<int, int>>& optimalRoute)
 {
-    // Create a copy of the maze to preserve the original maze
-    char** mazeCopy = new char*[height];
+    
+    char** mazeCopy = new char* [height];
     for (int i = 0; i < height; ++i)
     {
         mazeCopy[i] = new char[width];
@@ -211,7 +220,7 @@ void printMazeWithRoute(char** maze, int height, int width, const vector<pair<in
         }
     }
 
-    // Mark the optimal route with 'X' in the maze copy
+    // Marks the optimal route with 'X' in the maze copy
     for (const auto& pos : optimalRoute)
     {
         int x = pos.first;
@@ -222,7 +231,7 @@ void printMazeWithRoute(char** maze, int height, int width, const vector<pair<in
         }
     }
 
-    // Print the maze with the optimal route marked
+    // Prints the maze with the optimal route marked
     for (int i = 0; i < height; ++i)
     {
         for (int j = 0; j < width; ++j)
@@ -232,13 +241,14 @@ void printMazeWithRoute(char** maze, int height, int width, const vector<pair<in
         cout << endl;
     }
 
-    // Free the memory allocated for the maze copy
+    // Frees the memory allocated for the maze copy
     for (int i = 0; i < height; ++i)
     {
         delete[] mazeCopy[i];
     }
     delete[] mazeCopy;
 }
+
 bool playerAction(char** maze, int& posX, int& posY, int& lives, vector<string>& inventory)
 {
     cout << "\nAction: ";
@@ -277,7 +287,7 @@ bool playerAction(char** maze, int& posX, int& posY, int& lives, vector<string>&
     case 'Q':
     case 'q':
         cout << "Quitting the maze game..." << endl;
-        return true; // End the loop by indicating to quit
+        return true; 
     default:
         cout << "Invalid action!" << endl;
         break;
@@ -285,7 +295,7 @@ bool playerAction(char** maze, int& posX, int& posY, int& lives, vector<string>&
 
     if (maze[posX][posY] == '?')
     {
-        lives--; // Decrement lives when player hits an enemy
+        lives--; 
         cout << "You lost a life! Lives remaining: " << lives << endl;
     }
     else if (maze[posX][posY] == 'C')
@@ -325,7 +335,6 @@ bool playerAction(char** maze, int& posX, int& posY, int& lives, vector<string>&
 
     return false; // Continues the loop
 }
-
 void moveEnemies(char** maze, int height, int width, int& posX, int& posY, int& lives)
 {
     // Find all enemy positions and move them randomly
@@ -361,12 +370,12 @@ void moveEnemies(char** maze, int height, int width, int& posX, int& posY, int& 
                     // Move the enemy to the new position
                     if (newI == posX && newJ == posY)
                     {
-                        // Enemy caught the player, decrement lives
+                       
                         lives--;
                         cout << "You lost a life! Lives remaining: " << lives << endl;
                         if (lives <= 0)
                         {
-                            return; // End the game if no lives remaining
+                            return; // Ends the game if no lives remaining
                         }
                     }
                     maze[i][j] = ' '; // Clear previous position
@@ -435,15 +444,15 @@ vector<pair<int, int>> calculateOptimalRoute(char** maze, int height, int width,
         }
     }
 
-    // No path found
+    
     return {};
 }
 
 void generateChests(char** maze, int height, int width)
 {
     // Randomly generate chests inside the maze represented by 'C'
-    int numChests = height * width / 50; // Adjust this number as needed
-    int keyIndex = rand() % numChests; // Random index for the chest containing the key
+    int numChests = height * width / 50; 
+    int keyIndex = rand() % numChests; 
     for (int k = 0; k < numChests; ++k)
     {
         int randX = 1 + rand() % (height - 2); // Generate random x coordinate
@@ -473,7 +482,7 @@ void ensureExit(char** maze, int height, int width)
     maze[exitX + 1][exitY] = '#'; // Below the exit
     maze[exitX][exitY + 1] = '#'; // Right of the exit
 
-    // Place the exit at the bottom right corner
+   
     maze[exitX][exitY] = 'E';
 
     // Place the door (D) to the left of the exit
@@ -482,11 +491,13 @@ void ensureExit(char** maze, int height, int width)
 
 void ensureKey(char** maze, int height, int width)
 {
-    // Ensure at least one key in smaller mazes
+   
     if (height < 10 || width < 10)
     {
         int randX = 1 + rand() % (height - 2); // Generate random x coordinate
         int randY = 1 + rand() % (width - 2); // Generate random y coordinate
-        maze[randX][randY] = 'C'; // Place a chest containing a key at the random position
+        maze[randX][randY] = 'C'; // Places a chest containing a key at the random position
     }
 }
+
+
