@@ -1,49 +1,83 @@
-// CE224 Final.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+/*
+Anders Ladow
+Main File for Final Project
+A* and Dijsktra Path Grid Implementation
+*/
+
 
 #include <iostream>
 #include <vector>
 #include <list>
 #include <queue>
-#include <utility>
 #include <limits>
 #include <algorithm>
-#include <functional> // for std::function
 #include<random>
 #include<set>
 
-#include "gridClass.cpp"
+#include "gridClass.cpp" //importing written class file
 
 using namespace std;
 
+//main function
 int main()
 {
-    int width = 25, height = 25;
+    int width = 50, height = 50; //initializing the width and height of the grid
     
     
     random_device rd; // obtain a random number from hardware
     mt19937 gen(rd()); // seed the generator
     uniform_int_distribution<> distr(0, width -1); // define the range
 
-    set<pair<int, int>> obstacles;
-    while (obstacles.size() < 150) { // Generate 5 unique obstacles
-        obstacles.insert({ distr(gen), distr(gen) });
+    //Inserting "obstacles" into the grid 
+    set<pair<int, int>> obstacles; //set so values can be inserted
+    while (obstacles.size() < 200) { // randomly generate given amount of obstacles
+        
+        
+        int coord_x = distr(gen); //generating x_coordinate
+        int coord_y = distr(gen); //generating y_coordinate
+        
+        if (coord_x == 0 && coord_y == 0) //if the coordinates are (0,0), there is no path
+        {
+            //so regenerate the coordinates and continue
+            int coord_x = distr(gen);
+            int coord_y = distr(gen);
+            continue;
+        }
+
+        else if (coord_x == width-1 && coord_y == height-1) //if the coordinates are (width-1, height-1), there is no path
+        {
+            //so regenerate the coordinates and continue
+            int coord_x = distr(gen);
+            int coord_y = distr(gen);
+            continue;
+        }
+        
+        //otherwise, insert the obstacle in the grid
+        obstacles.insert({ coord_x, coord_y });
+        
     }
 
-    vector<pair<int, int>> random_obstacles(obstacles.begin(), obstacles.end());
-    GridGraph g(width, height, random_obstacles);
+    //Changing the set of obstacles into a vector of obstacles
+    vector<pair<int, int>> random_obstacles(obstacles.begin(), obstacles.end()); 
 
-    int startX = 0, startY = 0, goalX = width-1, goalY = height-1;
-    vector<int> path = g.aStarSearch(startX, startY, goalX, goalY);
+    //Creating the grid class with the specified width and height, and with the generated obstacles
+    gridClass g(width, height, random_obstacles);
 
-    std::cout << "Path using A* Search:\n";
-    g.printGrid(path);
+    int startX = 0, startY = 0, goalX = width-1, goalY = height-1; //initializing the start and end goal coordinates
 
-    path = g.dijkstraSearch(startX, startY, goalX, goalY);
+    //Running dijsktra's algorithm to get the resulting path vector
+    vector<int>path1 = g.dijkstraSearch(startX, startY, goalX, goalY);
 
     std::cout << "\nPath using Dijkstra's Search:\n";
-    g.printGrid(path);
+    g.printGrid(path1); //printing the resulting grid with the path
 
+    //Running A* algorithm, with Euclidian heuristic equation to get resulting path vector
+    vector<int> path2 = g.aStarSearch(startX, startY, goalX, goalY);
+
+    std::cout << "Path using A* Search:\n";
+    g.printGrid(path2); //printing the resulting grid with the path
+    
+    cout << "Paths Succesfully Generated!" << endl;
     return 0;
 }
 
