@@ -134,14 +134,31 @@ void generateMaze(char**& maze, int height, int width)
         }
     }
 
-    // Randomly generate walls inside the maze
+    // Initialize DisjointSet to keep track of cell connectivity
+    DisjointSet ds(height * width);
+
+    // Randomly generate walls inside the maze using disjoint sets
     srand(time(NULL)); // Seed the random number generator
     int numWalls = height * width / 4; // Adjust this number as needed
     for (int k = 0; k < numWalls; ++k)
     {
         int randX = 1 + rand() % (height - 2); // Generate random x coordinate
         int randY = 1 + rand() % (width - 2); // Generate random y coordinate
-        maze[randX][randY] = '#'; // Place a wall at the random positions
+        maze[randX][randY] = '#'; // Place a wall at the random position
+
+        // Merge the current cell with its neighbors using disjoint sets
+        int cell = randX * width + randY;
+        int neighborOffsets[] = { -1, 1, -width, width };
+        int randNeighborIndex = rand() % 4;
+        int randNeighborOffset = neighborOffsets[randNeighborIndex];
+        int neighbor = cell + randNeighborOffset;
+
+        // Ensure that the neighbor is within bounds
+        if (randX + randNeighborOffset / width > 0 && randX + randNeighborOffset / width < height - 1 &&
+            randY + randNeighborOffset % width > 0 && randY + randNeighborOffset % width < width - 1)
+        {
+            ds.merge(cell, neighbor);
+        }
     }
 
     // Randomly generate enemies inside the maze represented by '?'
@@ -160,7 +177,6 @@ void generateMaze(char**& maze, int height, int width)
     ensureExit(maze, height, width);
     ensureKey(maze, height, width);
 }
-
 void deleteMaze(char**& maze, int height)
 {
     for (int i = 0; i < height; ++i)
