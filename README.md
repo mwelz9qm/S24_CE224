@@ -35,30 +35,55 @@ The Merkle root efficiently verifies transactions without needing to check every
 - Openssl (openssl@3.0.7) will run the code
 
 2. **Compiling**
--In the shell input:  -g++ -o name_of_program name_of_file.cpp -lssl -lcrypto
-After compiling run the code: ./name_of_program
--Set name name_of_program and name_of_file.cpp to whatever you name them on your machine
+- In the shell input:
+  
+      -g++ -o name_of_program name_of_file.cpp -lssl -lcrypto
 
-3. **Running and Modifying**
+-After compiling run the code:
+
+     ./name_of_program
+
+-Set name: 
+    
+    name_of_program and name_of_file.cpp to whatever you name them on your machine
+
+4. **Running and Modifying**
 -The difficulty of the mining process is determined by leading '0' in the `Blockchain` class. int difficulty = 4 means the target hash needs four leading zeros. 0000xxxx
 
-It is found on line: 123
+-It is found on line: 123
+
 class Blockchain {
 private:
-    list<Block> chain;
+   list<Block> chain;
     int difficulty = 4; 
 
--To add a new block you must create it in the main function
+### How to Setup and Add Blocks to a Blockchain
 
- Blockchain bc;                                                  <-- bc should be changed to bc2 or bc3; needs a unique name. Change this value to call class and create new block
-    Block block1(bc.getLastHash(), bc.getDifficulty());          <-- new block would be Block block2 (change bc here too)
-    block1.addTransaction(Transaction("Alice", "Bob", 100));     <-- block2.addTransaction(Transaction "Name", "Name", intVal));
-    block1.addTransaction(Transaction("Charlie", "Dave", 50));   "add as many transactions to a block" 
-    bc.addBlock(block1);                                         <-- add block to the chain (change bc and block1 here as well)
+1. **Initialize a new Blockchain instance**:
+   ```cpp
+    // Initialize the blockchain instance
+    Blockchain bc; // Change 'bc' to 'bc2', 'bc3', etc., if you need multiple instances
 
--To change the Nonce output modify line 52
+    // Create a new block, change 'block1' to 'block2', 'block3', etc., for subsequent blocks
+    Block block1(bc.getLastHash(), bc.getDifficulty());
 
-if (nonce % 10000 == 0) <-- will show every 10000th Nonce. 
+    // Add transactions to the block
+    block1.addTransaction(Transaction("Alice", "Bob", 100));
+    block1.addTransaction(Transaction("Charlie", "Dave", 50));
+    // Optionally, add more transactions as needed
+
+2. **Changing difficulty and Nonce output rate
+
+    ```cpp
+    //To change the Nonce output modify line 52
+    if (nonce % 10000 == 0) <-- will show every 10000th Nonce.
+
+    //To change the difficulty i.e. leading zeros for target hash
+    class Blockchain {
+    private:
+        list<Block> chain;
+        int difficulty = 4; // current difficulty takes 1 second to mine a block, increasing by a factor of 10 for an increase of 1
+
 
 ### Asymptotic Analysis
 
@@ -111,6 +136,9 @@ Merkle Root of six transactions in < 0ms
 
 Block mined in 125318 ms at difficulty 6 (000000)
 Merkle Root of six transactions in < 0ms
+
+...Increases by a factor of 10 when leading 0 is added
+...Transactions would have to reach thousands per block before seeing a noticeable change in time taken
 
 
 
