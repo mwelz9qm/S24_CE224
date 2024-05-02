@@ -1,6 +1,6 @@
 # Blockchain Implementation with Merkle Root
 
-This repository contains a C++ implementation of a simple blockchain incorporating Merkle roots for transaction integrity. The implementation showcases creating a blockchain, adding transactions, mining blocks, and calculating Merkle roots to ensure the data's security and immutability.
+This repository contains my C++ implementation of a simple blockchain that now includes Merkle roots for increased security. This is an improvement on the base project, which was a very simple blockchain structure that successfully used SHA_256, but failed to securely store transactions; previously stored as a string linked to a block. The program now successfully validates between blocks and hashes the transactions ledgered in each block. 
 
 ## Features
 
