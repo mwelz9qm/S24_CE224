@@ -1,0 +1,167 @@
+import functools
+import hashlib
+import os
+import random
+from Crypto.PublicKey import RSA
+from math import gcd
+
+############# Ring class ##############
+class Ring:
+#constructor
+  def __init__(self, k, L: int = 1024) -> None:
+# list of RSA public keys for those in the ring
+    self.k = k
+#key length
+    self.l = L
+#number of participants
+    self.n = len(k)
+    self.q = 1 << (L - 1)
+
+
+############ HELPER FUNCS #################
+
+#hashes the message
+  def _permut(self, m):
+  #encode message m into bytes using UTF-8 encoding
+    msg = m.encode("utf-8")
+  #calculate SHA-1 hash of encoded message - converts to hex - assign to p
+    self.p = int(hashlib.sha1(msg).hexdigest(), 16)
+
+#second hash
+  def _E(self, x):
+  #concatenate integer x with value of p, covert to bytes with UTF-8 encoding
+    msg = f"{x}{self.p}".encode("utf-8")
+  #calculate SHA-1 hash of concatenated bytes, covert to hex- hashes input x with p
+    return int(hashlib.sha1(msg).hexdigest(), 16)
+
+  #related to RSA, g is the trapdoor function that performs modular arithmetic when the if loop conditions are met
+  def _g(self, x, e, n):
+  #divide x by n and store quotient in q, remainder in r
+    q, r = divmod(x, n)
+
+    if ((q + 1) * n) <= ((1 << self.l) - 1):
+  #calculate r^e mod n and adds q*n to it if true
+        result = q * n + pow(r, e, n)
+    else:
+        result = x
+    return result
+
+##################### SIGN MESSAGE FUNC #####################
+#signing function
+  def sign_message(self, m: str, z: int):
+#permutation on m
+    self._permut(m)
+#initialized list 's', length of n, with non values 
+    s = [None] * self.n
+#random int between 0 and 1<<(L-1)
+    u = random.randint(0, self.q)
+#calculate c and v as the encryption of u 
+    c = v = self._E(u)
+# these ranges include everyone EXCEPT z
+    first_range = list(range(z + 1, self.n))
+    second_range = list(range(z))
+    whole_range = first_range + second_range
+
+#generateion of xi (si) for each participant and applies g to each public k and si
+    
+    for i in whole_range:
+#random int and store at index i in list s
+      s[i] = random.randint(0, self.q)
+#calcuate e by applying g to s[i], e, mod n of the i-th persons public key
+      e = self._g(s[i], self.k[i].e, self.k[i].n)
+#v = function e applied to the xor of v and e
+      v = self._E(v ^ e)
+#the index is the last index, update c to v
+      if (i + 1) % self.n == 0:
+        c = v
+#generate signature for z-th peson by applying g to the xor of v and u along with d and n of z-th persons key
+    s[z] = self._g(v ^ u, self.k[z].d, self.k[z].n)
+#return signature as a list with c followed by s
+    return [c] + s
+
+#################### VERIFY MESSAGE FUNC ####################
+
+  def verify_message(self, m: str, X) -> bool:
+  #permutation on m
+    self._permut(m)
+#compute value using g func applied to the i+1th element of x and the e and n parameters of the i-th person public key
+    def _f(i):
+      return self._g(X[i + 1], self.k[i].e, self.k[i].n)
+#create list y by appling f func to each index in range [0, len()-1)]
+    y = map(_f, range(len(X) - 1))
+    y = list(y)
+# func computes a value using E func appplied to XOR  of x and the i-th element of y
+    def _g(x, i):
+      return self._E(x ^ y[i])
+#apply g func to each element in range 0-n; reduces list of y down to a single value r
+    r = functools.reduce(_g, range(self.n), X[0])
+#returns true if r =first element of x ie signature is valid
+    return r == X[0]
+
+
+
+############## RSA FUNCTION ###############
+
+class RSAKeys:
+  def __init__(self, n, e, d):
+    self.n = n
+    self.e = e
+    self.d = d
+
+  def modInv(self, m):
+    m0, x0, x1 = m, 0, 1
+    while self.i > 1:
+      q = self.i // m
+      m, self.i = self.i % m, m
+      x0, x1 = x1 - q * x0, x0
+
+    if x1 < 0: 
+      x1 += m0
+      return x1
+    q = self.i / m
+    m, self.i = self.i % m, m
+    x0, x1, = x1 - q * x0, x0
+
+    if x1 < 0: 
+      x1 += m0
+    return x1
+
+  
+
+  def RSA_func(p, q):
+    keys = RSAKeys(p * q)
+    eTot = (p - 1) * (q - 1)
+
+    for i in range(2, eTot +1):
+      if gcd(i, eTot) == 1:
+        keys.e = i
+        break
+
+    keys.d = modInv(keys.e, eTot)
+    return keys
+
+############ MAIN FUNC ############
+
+def main():
+
+
+  size = 4
+  
+#replacing wiki rn function with my own
+  def _rn(params):
+    p, q = params
+    p = 10000019
+    q = 10010111
+    keys = RSAKeys.RSA_func(p, q)
+    return RSA.construct((keys.n, keys.e, keys.d))
+    
+  key = [Ring([RSAKeys.RSA_func(p, q)]) for _ in range(size)]
+  key = list(key)
+
+  r = Ring(key)
+
+  msg1, msg2 = "hello", "world"
+  for i in range(size):
+    signature_1 = r.sign_message(msg1, i)
+    signature_2 = r.sign_message(msg2, i)
+    assert r.verify_message(msg1, signature_1,) and r.verify_message(msg2, signature_2) and not r.verify_message(msg1, signature_2)
